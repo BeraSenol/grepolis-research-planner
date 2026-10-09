@@ -9,7 +9,7 @@
 </head>
 <body>
 <style>
-/* Layout: product-page rhythm. Translucent sticky nav, black hero with a gradient headline, then a configurator with the image on a sticky stage at left and "Step. Prompt." option groups at right. Stacks below 1068px. Only the research grid inside the image uses the in-game academy look. */
+/* Layout: product-page rhythm. Translucent sticky nav, a short black intro, then a configurator with the image on a sticky stage at left and "Step. Prompt." option groups at right. Stacks below 1068px. */
 :root {
   --bg: #ffffff;
   --bg-alt: #f5f5f7;
@@ -78,13 +78,9 @@ button { font: inherit; letter-spacing: inherit; }
 .btn-sm:hover { background: var(--blue-hover); }
 
 /* hero */
-.hero { background: var(--hero-bg); color: var(--hero-fg); text-align: center; padding-inline: 22px; padding-block: 64px; }
+.hero { background: var(--hero-bg); color: var(--hero-fg); text-align: center; padding-inline: 22px; padding-block: 56px; }
 .hero h1 { font-family: var(--display); font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: .007em; margin: 0 0 12px; }
-.headline {
-  font-family: var(--display); font-size: clamp(38px, 5vw, 64px); line-height: 1.06; font-weight: 600; letter-spacing: -0.015em;
-  margin: 0 auto; max-width: 1000px; text-wrap: balance; color: var(--hero-fg);
-}
-.lede { font-family: var(--display); font-size: clamp(17px, 1.7vw, 21px); line-height: 1.38; font-weight: 600; letter-spacing: .011em; color: var(--hero-fg-2); max-width: 640px; margin: 24px auto 0; text-wrap: balance; }
+.lede { font-family: var(--display); font-size: clamp(17px, 1.7vw, 21px); line-height: 1.38; font-weight: 600; letter-spacing: .011em; color: var(--hero-fg-2); max-width: 640px; margin: 0 auto; text-wrap: balance; }
 .lede b { color: var(--hero-fg); font-weight: 600; }
 
 /* configurator */
@@ -105,7 +101,7 @@ canvas { display: block; width: 100%; height: auto; outline: none; touch-action:
 .stat { display: grid; gap: 2px; align-content: start; min-width: 0; }
 .stat-label { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; line-height: 1.33; letter-spacing: -0.01em; color: var(--fg-2); }
 .stat-value { margin: 0; font-family: var(--display); font-size: 32px; line-height: 1.12; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
-.stat-value .extra { font-size: 19px; font-weight: 500; letter-spacing: -0.016em; color: var(--fg-3); }
+.stat-value .extra { font-size: 19px; font-weight: 500; letter-spacing: -0.016em; color: var(--fg-3); white-space: nowrap; }
 .stat-note { margin: 2px 0 0; font-size: 12px; line-height: 1.33; letter-spacing: -0.01em; color: var(--fg-2); }
 
 .steps { min-width: 0; display: grid; }
@@ -179,12 +175,14 @@ canvas { display: block; width: 100%; height: auto; outline: none; touch-action:
 @media (max-width: 734px) {
   .nav-inner { padding-inline: 16px; }
   .nav-title { font-size: 19px; }
-  .hero { padding-inline: 16px; padding-block: 48px; }
+  .hero { padding-inline: 16px; padding-block: 40px; }
   .hero h1 { font-size: 21px; }
   .config { padding-inline: 16px; padding-block: 32px 64px; }
   .canvas-wrap { overflow-x: auto; border-radius: 14px; }
   canvas { min-width: 600px; }
   .foot { padding-inline: 16px; }
+  .stat-value { font-size: 28px; }
+  .stat-value .extra { font-size: 16px; }
 }
 </style>
 
@@ -243,11 +241,14 @@ const COLOR_WORD = { g: "green", y: "yellow", r: "red" };
 // Parchment looks like the in-game academy.
 const FINISHES = {
   graphite: { name: "Graphite", note: "Looks best in Discord's dark mode.", chip: "#1d1d1f",
-              bg: "#000000", fg: "#f5f5f7", fg2: "#a1a1a6", fg3: "#86868b", stroke: "rgba(255,255,255,.12)", ring: "#2997ff" },
+              bg: "#000000", fg: "#f5f5f7", fg2: "#a1a1a6", stroke: "rgba(255,255,255,.12)", ring: "#2997ff",
+              level: "#f5f5f7", levelDot: "#86868b", divider: "rgba(255,255,255,.16)" },
   silver:   { name: "Silver",   note: "Bright and clean, for light mode.", chip: "#e3e4e6",
-              bg: "#f5f5f7", fg: "#1d1d1f", fg2: "#6e6e73", fg3: "#86868b", stroke: "rgba(0,0,0,.08)", shadow: "rgba(0,0,0,.16)", ring: "#0071e3" },
+              bg: "#f5f5f7", fg: "#1d1d1f", fg2: "#6e6e73", stroke: "rgba(0,0,0,.08)", shadow: "rgba(0,0,0,.16)", ring: "#0071e3",
+              level: "#1d1d1f", levelDot: "#86868b", divider: "rgba(0,0,0,.13)", dividerHi: "rgba(255,255,255,.95)" },
   parchment: { name: "Parchment", note: "Feels like the game itself.", chip: "#e9d6a6",
-               bg: "#f3e5c3", paper: true, serif: true, frame: true, fg: "#3b2a14", fg2: "#6b5430", ring: "#0071e3" },
+               bg: "#f3e5c3", paper: true, serif: true, frame: true, fg: "#3b2a14", fg2: "#6b5430", ring: "#0071e3",
+               level: "#2b1d0c", levelDot: "#5b4220", divider: "rgba(146,108,46,.55)", dividerHi: "rgba(255,248,226,.85)" },
 };
 const WORLDS = {
   revolt:   { name: "Revolt",   note: "Revolt worlds research Revolt at level 28." },
@@ -370,27 +371,22 @@ function drawParchment(ctx, W, H) {
   ctx.strokeStyle = "#a8874a"; ctx.lineWidth = 2; ctx.strokeRect(1, 1, W - 2, H - 2);
 }
 
-// Academy level above each column: "1 · ·" with column dividers on Parchment, plain numbers otherwise
+// Column dividers and "1 · ·" level headers, as in the game, in the finish's colours
 function drawLevels(ctx, f, cols, top, bottom) {
-  if (f.paper) {
-    for (let ci = 1; ci < cols.length; ci++) {
-      const sx = Math.round(PX + ci * CW);
-      ctx.fillStyle = "rgba(146,108,46,.55)"; ctx.fillRect(sx - 1, top - 4, 1, bottom - top + 12);
-      ctx.fillStyle = "rgba(255,248,226,.85)"; ctx.fillRect(sx, top - 4, 1, bottom - top + 12);
-    }
-    ctx.textAlign = "left"; ctx.textBaseline = "middle";
-    cols.forEach(([lv], ci) => {
-      const lx = PX + ci * CW + 7, ly = top + 12;
-      ctx.font = "bold 14px " + GAME; ctx.fillStyle = "#2b1d0c";
-      ctx.fillText(String(lv), lx, ly);
-      const e = lx + ctx.measureText(String(lv)).width;
-      ctx.fillStyle = "#5b4220";
-      [e + 9, e + 19].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, 1.4, 0, Math.PI * 2); ctx.fill(); });
-    });
-  } else {
-    ctx.font = "600 13px " + SANS; ctx.fillStyle = f.fg3; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    cols.forEach(([lv], ci) => ctx.fillText(String(lv), PX + ci * CW + CW / 2, top + 11));
+  for (let ci = 1; ci < cols.length; ci++) {
+    const sx = Math.round(PX + ci * CW);
+    ctx.fillStyle = f.divider; ctx.fillRect(sx - 1, top - 4, 1, bottom - top + 12);
+    if (f.dividerHi) { ctx.fillStyle = f.dividerHi; ctx.fillRect(sx, top - 4, 1, bottom - top + 12); }
   }
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  cols.forEach(([lv], ci) => {
+    const lx = PX + ci * CW + 7, ly = top + 12;
+    ctx.font = f.paper ? "bold 14px " + GAME : "600 14px " + SANS;
+    ctx.fillStyle = f.level; ctx.fillText(String(lv), lx, ly);
+    const e = lx + ctx.measureText(String(lv)).width;
+    ctx.fillStyle = f.levelDot;
+    [e + 9, e + 19].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, 1.4, 0, Math.PI * 2); ctx.fill(); });
+  });
   ctx.textBaseline = "alphabetic";
 }
 
@@ -658,7 +654,6 @@ function App() {
 
     <header class="hero">
       <h1>Research Planner</h1>
-      <p class="headline">Every research. One clear plan.</p>
       <p class="lede">Mark each research <b>green, yellow or red</b>, add a title, and <b>download one image</b> your whole alliance can follow.</p>
     </header>
 
