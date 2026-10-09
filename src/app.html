@@ -376,16 +376,17 @@ function drawLevels(ctx, f, cols, top, bottom) {
     ctx.fillStyle = f.divider; ctx.fillRect(sx - 1, top - 4, 1, bottom - top + 12);
     if (f.dividerHi) { ctx.fillStyle = f.dividerHi; ctx.fillRect(sx, top - 4, 1, bottom - top + 12); }
   }
-  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.textBaseline = "middle";
   cols.forEach(([lv], ci) => {
     const lx = PX + ci * CW + 7, ly = top + 12;
     ctx.font = f.paper ? "bold 14px " + GAME : "600 14px " + SANS;
-    ctx.fillStyle = f.level; ctx.fillText(String(lv), lx, ly);
-    const e = lx + ctx.measureText(String(lv)).width;
+    // every number sits right-aligned in a two-digit slot, so "1 · ·" lines up with "10 · ·"
+    const e = lx + ctx.measureText("00").width;
+    ctx.textAlign = "right"; ctx.fillStyle = f.level; ctx.fillText(String(lv), e, ly);
     ctx.fillStyle = f.levelDot;
     [e + 9, e + 19].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, 1.4, 0, Math.PI * 2); ctx.fill(); });
   });
-  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 }
 
 // x, y: top-left of the tile's slot (FS x FS)
