@@ -232,13 +232,15 @@ const TINT = { g: "rgb(40,200,70)", y: "rgb(255,200,0)", r: "rgb(225,35,35)" }; 
 const NEXT = { g: "y", y: "r", r: "g" };
 const COLOR_WORD = { g: "green", y: "yellow", r: "red" };
 
+// Each finish styles the whole image. Graphite and Silver are clean and Apple-like;
+// Parchment looks like the in-game academy.
 const FINISHES = {
   graphite: { name: "Graphite", note: "Looks best in Discord's dark mode.", chip: "#1d1d1f",
-              bg: "#000000", fg: "#f5f5f7", fg2: "#a1a1a6", panelLine: "rgba(255,255,255,.14)" },
+              bg: "#000000", fg: "#f5f5f7", fg2: "#a1a1a6", fg3: "#86868b", stroke: "rgba(255,255,255,.12)", ring: "#2997ff" },
   silver:   { name: "Silver",   note: "Bright and clean, for light mode.", chip: "#e3e4e6",
-              bg: "#f5f5f7", fg: "#1d1d1f", fg2: "#6e6e73", panelLine: "rgba(0,0,0,.10)", shadow: "rgba(60,40,10,.18)" },
+              bg: "#f5f5f7", fg: "#1d1d1f", fg2: "#6e6e73", fg3: "#86868b", stroke: "rgba(0,0,0,.08)", shadow: "rgba(0,0,0,.16)", ring: "#0071e3" },
   parchment: { name: "Parchment", note: "Feels like the game itself.", chip: "#e9d6a6",
-               bg: "#f3e5c3", paper: true, serif: true, fg: "#3b2a14", fg2: "#6b5430", panelLine: "rgba(90,60,20,.18)", shadow: "rgba(90,60,20,.22)" },
+               bg: "#f3e5c3", paper: true, serif: true, frame: true, fg: "#3b2a14", fg2: "#6b5430", ring: "#0071e3" },
 };
 const WORLDS = {
   revolt:   { name: "Revolt",   note: "Revolt worlds research Revolt at level 28." },
@@ -321,11 +323,9 @@ function loadIcons() {
 }
 
 // ---------- drawing the image ----------
-// Outer frame: clean and Apple-like. Research grid: the in-game academy panel.
 const SCALE = 2, PX = 40, PT = 40, PB = 34;
-const TILE = 50, FRAME = 3, FS = TILE + 2 * FRAME;   // icon, frame width, framed size
-const CW = 66, RG = 10, ROW = FS + RG;                // column width, row gap, row pitch
-const PP = 12, HEAD = 34, PBOT = 14, PR = 10;         // panel padding, header height, bottom padding, radius
+const TILE = 50, FRAME = 3, FS = TILE + 2 * FRAME;   // icon, in-game frame width, slot size
+const CW = 66, RG = 10, ROW = FS + RG, HEAD = 30;     // column width, row gap, row pitch, level header
 const SANS = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif';
 const GAME = 'Verdana, Geneva, Tahoma, sans-serif';
 const SERIF = 'Georgia, "Times New Roman", serif';
@@ -346,59 +346,72 @@ function wrapLines(ctx, text, maxW) {
   return lines;
 }
 
-function drawPanel(ctx, f, x, y, w, h, cols) {
-  if (f.shadow) {
-    ctx.save(); ctx.shadowColor = f.shadow; ctx.shadowBlur = 18; ctx.shadowOffsetY = 4;
-    ctx.fillStyle = "#efdcae"; rr(ctx, x, y, w, h, PR); ctx.fill(); ctx.restore();
-  }
-  ctx.save();
-  rr(ctx, x, y, w, h, PR); ctx.clip();
-  // parchment
-  const g = ctx.createLinearGradient(0, y, 0, y + h);
+function drawParchment(ctx, W, H) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, "#f8eccb"); g.addColorStop(1, "#efdcab");
-  ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
-  const vg = ctx.createRadialGradient(x + w / 2, y + h / 2, Math.min(w, h) * .25, x + w / 2, y + h / 2, Math.max(w, h) * .62);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .25, W / 2, H / 2, Math.max(W, H) * .62);
   vg.addColorStop(0, "rgba(255,250,236,.30)"); vg.addColorStop(1, "rgba(150,108,40,.20)");
-  ctx.fillStyle = vg; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   // paper grain, seeded so every render is identical
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let i = 0, n = Math.round(w * h / 80); i < n; i++) {
+  for (let i = 0, n = Math.round(W * H / 80); i < n; i++) {
     ctx.fillStyle = rnd() < .55 ? "rgba(120,84,28,.08)" : "rgba(255,255,255,.12)";
-    ctx.fillRect(x + rnd() * w, y + rnd() * h, 1, 1);
+    ctx.fillRect(rnd() * W, rnd() * H, 1, 1);
   }
-  // embossed column dividers
-  for (let ci = 1; ci < cols.length; ci++) {
-    const sx = Math.round(x + PP + ci * CW);
-    ctx.fillStyle = "rgba(146,108,46,.55)"; ctx.fillRect(sx - 1, y + 8, 1, h - 16);
-    ctx.fillStyle = "rgba(255,248,226,.85)"; ctx.fillRect(sx, y + 8, 1, h - 16);
-  }
-  ctx.restore();
-  ctx.strokeStyle = "#a9864c"; ctx.lineWidth = 1; rr(ctx, x + .5, y + .5, w - 1, h - 1, PR); ctx.stroke();
-  ctx.strokeStyle = f.panelLine; rr(ctx, x - .5, y - .5, w + 1, h + 1, PR + 1); ctx.stroke();
-
-  // level headers, "1 · ·" as in the game
-  ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  cols.forEach(([lv], ci) => {
-    const lx = x + PP + ci * CW + 7, ly = y + HEAD / 2 + 1;
-    ctx.font = "bold 14px " + GAME; ctx.fillStyle = "#2b1d0c";
-    ctx.fillText(String(lv), lx, ly);
-    const e = lx + ctx.measureText(String(lv)).width;
-    ctx.fillStyle = "#5b4220";
-    [e + 9, e + 19].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, 1.4, 0, Math.PI * 2); ctx.fill(); });
-  });
+  ctx.strokeStyle = "#a8874a"; ctx.lineWidth = 2; ctx.strokeRect(1, 1, W - 2, H - 2);
 }
 
-function drawTile(ctx, imgs, id, s, x, y) {
-  ctx.save();
-  ctx.shadowColor = "rgba(60,38,8,.5)"; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1.5;
-  ctx.fillStyle = "#33230f"; ctx.fillRect(x, y, FS, FS);
-  ctx.restore();
-  ctx.fillStyle = "#8c6b37"; ctx.fillRect(x + 1, y + 1, FS - 2, FS - 2);   // bevel
-  ctx.fillStyle = "#2a1b09"; ctx.fillRect(x + 2, y + 2, FS - 4, FS - 4);
+// Academy level above each column: "1 · ·" with column dividers on Parchment, plain numbers otherwise
+function drawLevels(ctx, f, cols, top, bottom) {
+  if (f.paper) {
+    for (let ci = 1; ci < cols.length; ci++) {
+      const sx = Math.round(PX + ci * CW);
+      ctx.fillStyle = "rgba(146,108,46,.55)"; ctx.fillRect(sx - 1, top - 4, 1, bottom - top + 12);
+      ctx.fillStyle = "rgba(255,248,226,.85)"; ctx.fillRect(sx, top - 4, 1, bottom - top + 12);
+    }
+    ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    cols.forEach(([lv], ci) => {
+      const lx = PX + ci * CW + 7, ly = top + 12;
+      ctx.font = "bold 14px " + GAME; ctx.fillStyle = "#2b1d0c";
+      ctx.fillText(String(lv), lx, ly);
+      const e = lx + ctx.measureText(String(lv)).width;
+      ctx.fillStyle = "#5b4220";
+      [e + 9, e + 19].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, 1.4, 0, Math.PI * 2); ctx.fill(); });
+    });
+  } else {
+    ctx.font = "600 13px " + SANS; ctx.fillStyle = f.fg3; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    cols.forEach(([lv], ci) => ctx.fillText(String(lv), PX + ci * CW + CW / 2, top + 11));
+  }
+  ctx.textBaseline = "alphabetic";
+}
+
+// x, y: top-left of the tile's slot (FS x FS)
+function drawTile(ctx, f, imgs, id, s, x, y) {
   const im = imgs[id] && imgs[id][s];
-  if (im) ctx.drawImage(im, x + FRAME, y + FRAME, TILE, TILE);
-  else { ctx.fillStyle = TINT[s]; ctx.fillRect(x + FRAME, y + FRAME, TILE, TILE); }
+  if (f.frame) {
+    ctx.save();
+    ctx.shadowColor = "rgba(60,38,8,.5)"; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1.5;
+    ctx.fillStyle = "#33230f"; ctx.fillRect(x, y, FS, FS);
+    ctx.restore();
+    ctx.fillStyle = "#8c6b37"; ctx.fillRect(x + 1, y + 1, FS - 2, FS - 2);   // bevel
+    ctx.fillStyle = "#2a1b09"; ctx.fillRect(x + 2, y + 2, FS - 4, FS - 4);
+    if (im) ctx.drawImage(im, x + FRAME, y + FRAME, TILE, TILE);
+    else { ctx.fillStyle = TINT[s]; ctx.fillRect(x + FRAME, y + FRAME, TILE, TILE); }
+    return;
+  }
+  const tx = x + FRAME, ty = y + FRAME, R = 10;
+  if (f.shadow) {
+    ctx.save(); ctx.shadowColor = f.shadow; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3;
+    ctx.fillStyle = f.bg; rr(ctx, tx, ty, TILE, TILE, R); ctx.fill(); ctx.restore();
+  }
+  ctx.save();
+  rr(ctx, tx, ty, TILE, TILE, R); ctx.clip();
+  if (im) ctx.drawImage(im, tx, ty, TILE, TILE);
+  else { ctx.fillStyle = TINT[s]; ctx.fillRect(tx, ty, TILE, TILE); }
+  ctx.restore();
+  ctx.strokeStyle = f.stroke; ctx.lineWidth = 1; rr(ctx, tx + .5, ty + .5, TILE - 1, TILE - 1, R - .5); ctx.stroke();
 }
 
 // "Research points 112 (+16) · Academy level 28" as [text, bold] pieces
@@ -423,11 +436,10 @@ function segWidth(ctx, f, segs) {
 }
 
 function render(canvas, st, imgs, deco) {
-  const f = FINISHES[st.finish] || FINISHES.graphite;
+  const f = FINISHES[st.finish] || FINISHES.parchment;
   const cols = visibleColumns(st.world);
   const rows = Math.max(...cols.map(c => c[1].length));
-  const panelW = PP * 2 + cols.length * CW;
-  const W = PX * 2 + panelW;
+  const W = PX * 2 + cols.length * CW;
   const title = st.title.trim(), note = st.note.trim();
 
   const m = canvas.getContext("2d");
@@ -437,9 +449,10 @@ function render(canvas, st, imgs, deco) {
   if (title) headH += 38;
   if (noteLines.length) headH += (title ? 6 : 0) + noteLines.length * 24;
   if (headH) headH += 26;
-  const panelX = PX, panelY = PT + headH;
-  const panelH = HEAD + rows * FS + (rows - 1) * RG + PBOT;
-  const legendTop = panelY + panelH + 26;
+  const gridTop = PT + headH;
+  const tilesTop = gridTop + HEAD;
+  const gridBottom = tilesTop + rows * FS + (rows - 1) * RG;
+  const legendTop = gridBottom + 30;
 
   // legend on the left, plan summary on the right; the summary drops to its own row if they don't fit
   const legendFont = f.serif ? "400 15px " + SERIF : "500 15px " + SANS;
@@ -456,12 +469,8 @@ function render(canvas, st, imgs, deco) {
   const ctx = canvas.getContext("2d");
   ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
-  if (f.paper) {
-    const pg = ctx.createLinearGradient(0, 0, 0, H);
-    pg.addColorStop(0, "#f7ebcd"); pg.addColorStop(1, "#efdfb6");
-    ctx.fillStyle = pg; ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = "#a8874a"; ctx.lineWidth = 2; ctx.strokeRect(1, 1, W - 2, H - 2);
-  } else { ctx.fillStyle = f.bg; ctx.fillRect(0, 0, W, H); }
+  if (f.paper) drawParchment(ctx, W, H);
+  else { ctx.fillStyle = f.bg; ctx.fillRect(0, 0, W, H); }
 
   // title and note
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
@@ -476,17 +485,20 @@ function render(canvas, st, imgs, deco) {
     noteLines.forEach((l, i) => ctx.fillText(l, PX, y + 18 + i * 24)); track(ctx, 0);
   }
 
-  // the research grid, in the in-game style
-  drawPanel(ctx, f, panelX, panelY, panelW, panelH, cols);
+  // the research grid
+  drawLevels(ctx, f, cols, gridTop, gridBottom);
   const hits = [];
   cols.forEach(([, ids], ci) => ids.forEach((id, ri) => {
-    const cx = panelX + PP + ci * CW;
-    const tx = cx + (CW - FS) / 2, ty = panelY + HEAD + ri * ROW;
-    drawTile(ctx, imgs, id, st.states[id] || "g", tx, ty);
+    const cx = PX + ci * CW;
+    const x = cx + (CW - FS) / 2, y = tilesTop + ri * ROW;
+    drawTile(ctx, f, imgs, id, st.states[id] || "g", x, y);
     if (deco && (deco.hover === id || deco.focus === id)) {
-      ctx.strokeStyle = "#0071e3"; ctx.lineWidth = 2.5; rr(ctx, tx - 4, ty - 4, FS + 8, FS + 8, 6); ctx.stroke();
+      ctx.strokeStyle = f.ring; ctx.lineWidth = 2.5;
+      if (f.frame) rr(ctx, x - 4, y - 4, FS + 8, FS + 8, 6);
+      else rr(ctx, x + FRAME - 4, y + FRAME - 4, TILE + 8, TILE + 8, 13);
+      ctx.stroke();
     }
-    hits.push({ id, ci, ri, x: cx, y: ty - RG / 2, w: CW, h: FS + RG });
+    hits.push({ id, ci, ri, x: cx, y: y - RG / 2, w: CW, h: FS + RG });
   }));
 
   // legend
