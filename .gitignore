@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.DS_Store
+# output of tools/grepolis_research_tint.py
+grepolis_research_icons/

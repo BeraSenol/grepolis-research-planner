@@ -1,0 +1,653 @@
+<title>Grepolis Research Planner</title>
+<style>
+/* Layout: product-page rhythm. Translucent sticky nav, black hero with a gradient headline, then a configurator with the image on a sticky stage at left and "Step. Prompt." option groups at right. Stacks below 1068px. Only the research grid inside the image uses the in-game academy look. */
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f5f5f7;
+  --fg: #1d1d1f;
+  --fg-2: #6e6e73;
+  --fg-3: #86868b;
+  --line: #d2d2d7;
+  --opt-line: #86868b;
+  --field-bg: #ffffff;
+  --seg-track: #e8e8ed;
+  --seg-on: #ffffff;
+  --link: #0066cc;
+  --blue: #0071e3;
+  --blue-hover: #0077ed;
+  --ring: rgba(0, 113, 227, .32);
+  --stage-shadow: 0 24px 60px rgba(0, 0, 0, .12), 0 2px 8px rgba(0, 0, 0, .06);
+  --hero-bg: #000000;
+  --hero-fg: #f5f5f7;
+  --hero-fg-2: #86868b;
+  --nav-bg: rgba(22, 22, 23, .8);
+  --nav-fg: #f5f5f7;
+  --nav-line: rgba(255, 255, 255, .1);
+  --toast-bg: rgba(29, 29, 31, .92);
+  --toast-fg: #f5f5f7;
+  --g: rgb(40, 200, 70);
+  --y: rgb(255, 200, 0);
+  --r: rgb(225, 35, 35);
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --text: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --bg-alt: #161617; --fg: #f5f5f7; --fg-2: #a1a1a6; --fg-3: #86868b;
+    --line: #424245; --opt-line: #6e6e73; --field-bg: #1d1d1f; --seg-track: #1c1c1e; --seg-on: #636366;
+    --link: #2997ff; --ring: rgba(41, 151, 255, .45); --stage-shadow: 0 0 0 1px #2c2c2e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --bg-alt: #161617; --fg: #f5f5f7; --fg-2: #a1a1a6; --fg-3: #86868b;
+  --line: #424245; --opt-line: #6e6e73; --field-bg: #1d1d1f; --seg-track: #1c1c1e; --seg-on: #636366;
+  --link: #2997ff; --ring: rgba(41, 151, 255, .45); --stage-shadow: 0 0 0 1px #2c2c2e;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--text); font-size: 17px; line-height: 1.47; letter-spacing: -0.022em;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+button { font: inherit; letter-spacing: inherit; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* nav */
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  background: var(--nav-bg); color: var(--nav-fg); border-bottom: 1px solid var(--nav-line);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+}
+.nav-inner { max-width: 1240px; margin: 0 auto; padding-inline: 22px; height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-title { font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: .011em; white-space: nowrap; margin: 0; }
+.nav-actions { display: flex; align-items: center; gap: 20px; }
+.nav-link { font-size: 12px; letter-spacing: -0.01em; color: var(--nav-fg); opacity: .8; background: none; border: 0; padding: 4px 0; cursor: pointer; }
+.nav-link:hover { opacity: 1; }
+.btn-sm { font-size: 12px; line-height: 1.33; letter-spacing: -0.01em; color: #ffffff; background: var(--blue); border: 0; border-radius: 980px; padding: 4px 11px; cursor: pointer; }
+.btn-sm:hover { background: var(--blue-hover); }
+
+/* hero */
+.hero { background: var(--hero-bg); color: var(--hero-fg); text-align: center; padding-inline: 22px; padding-block: 52px 60px; }
+.hero h1 { font-family: var(--display); font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: .007em; margin: 0 0 8px; }
+.headline {
+  font-family: var(--display); font-size: clamp(38px, 5vw, 64px); line-height: 1.06; font-weight: 600; letter-spacing: -0.015em;
+  margin: 0 auto; max-width: 1000px; text-wrap: balance;
+  background: linear-gradient(90deg, #30d158 0%, #ffd60a 50%, #ff453a 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.lede { font-family: var(--display); font-size: clamp(17px, 1.7vw, 21px); line-height: 1.38; font-weight: 600; letter-spacing: .011em; color: var(--hero-fg-2); max-width: 640px; margin: 16px auto 0; text-wrap: balance; }
+.lede b { color: var(--hero-fg); font-weight: 600; }
+
+/* configurator */
+.config { padding-inline: 22px; padding-block: 48px 88px; }
+.config-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 56px; align-items: start; }
+.stage { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 52px + 28px); min-width: 0; }
+.canvas-wrap { border-radius: 18px; overflow: hidden; box-shadow: var(--stage-shadow); }
+.canvas-wrap:has(canvas:focus-visible) { box-shadow: var(--stage-shadow), 0 0 0 4px var(--ring); }
+canvas { display: block; width: 100%; height: auto; outline: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.stage-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 24px; margin-top: 16px; font-size: 14px; line-height: 1.43; letter-spacing: -0.016em; color: var(--fg-2); }
+.readout { margin: 0; min-width: 0; }
+.readout b { color: var(--fg); font-weight: 600; }
+.counts { display: flex; gap: 16px; margin: 0; font-variant-numeric: tabular-nums; }
+.counts span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.g { background: var(--g); } .dot.y { background: var(--y); } .dot.r { background: var(--r); }
+
+.steps { min-width: 0; display: grid; }
+.step { display: grid; gap: 16px; padding-block: 28px; border-top: 1px solid var(--line); }
+.step:first-child { border-top: 0; padding-top: 0; }
+.step h2 { font-family: var(--display); font-size: 24px; line-height: 1.17; font-weight: 600; letter-spacing: .009em; margin: 0; text-wrap: balance; }
+.step h2 .dim { color: var(--fg-3); }
+.help { font-size: 12px; line-height: 1.33; letter-spacing: -0.01em; color: var(--fg-2); margin: -4px 2px 0; }
+
+/* floating-label fields */
+.fields { display: grid; gap: 12px; }
+.field { position: relative; }
+.field input {
+  width: 100%; height: 56px; padding: 22px 16px 6px; font: inherit; font-size: 17px; letter-spacing: -0.022em;
+  color: var(--fg); background: var(--field-bg); border: 1px solid var(--opt-line); border-radius: 12px; outline: none;
+}
+.field label { position: absolute; left: 17px; top: 17px; font-size: 17px; line-height: 21px; color: var(--fg-3); pointer-events: none; }
+.field input:focus { border-color: var(--blue); box-shadow: 0 0 0 4px var(--ring); }
+.field input:focus + label, .field input:not(:placeholder-shown) + label { top: 8px; font-size: 12px; line-height: 16px; letter-spacing: -0.01em; }
+.field.with-dot input { padding-left: 42px; }
+.field.with-dot label { left: 43px; }
+.field .dot { position: absolute; left: 17px; top: 50%; width: 14px; height: 14px; margin-top: -7px; }
+
+/* finish picker */
+.finishes { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.swatch { position: relative; width: 38px; height: 38px; border-radius: 50%; border: 0; padding: 0; background: transparent; cursor: pointer; }
+.swatch .chip { position: absolute; inset: 6px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(128, 128, 128, .45), inset 0 -3px 6px rgba(0, 0, 0, .14); }
+.swatch[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--blue); }
+.swatch:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--blue), 0 0 0 4px var(--ring); }
+.finish-name { margin: -4px 0 0; font-size: 14px; line-height: 1.43; letter-spacing: -0.016em; color: var(--fg-2); }
+.finish-name b { display: block; color: var(--fg); font-size: 17px; font-weight: 600; letter-spacing: -0.022em; }
+
+/* segmented control */
+.segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 2px; border-radius: 9px; background: var(--seg-track); }
+.segmented button { border: 0; border-radius: 7px; padding: 7px 12px; font-size: 14px; line-height: 1.29; letter-spacing: -0.016em; color: var(--fg); background: transparent; cursor: pointer; }
+.segmented button[aria-checked="true"] { background: var(--seg-on); font-weight: 600; box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04); }
+.segmented button:focus-visible { outline-offset: 0; }
+
+/* call to action */
+.cta { display: grid; gap: 14px; justify-items: center; }
+.btn-lg { width: 100%; font-size: 17px; line-height: 1.18; color: #ffffff; background: var(--blue); border: 0; border-radius: 980px; padding: 15px 22px; cursor: pointer; }
+.btn-lg:hover { background: var(--blue-hover); }
+.link { font-size: 17px; color: var(--link); background: none; border: 0; padding: 0; cursor: pointer; }
+.link:hover { text-decoration: underline; }
+
+/* footer */
+.foot { background: var(--bg-alt); color: var(--fg-2); font-size: 12px; line-height: 1.33; letter-spacing: -0.01em; padding-inline: 22px; padding-block: 18px 30px; }
+.foot-inner { max-width: 1240px; margin: 0 auto; display: grid; gap: 8px; }
+.foot p { margin: 0; }
+
+/* toast */
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 20; transform: translateX(-50%);
+  max-width: calc(100% - 32px); padding: 11px 20px; border-radius: 980px; font-size: 14px; letter-spacing: -0.016em;
+  background: var(--toast-bg); color: var(--toast-fg); box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .field label { transition: top .18s ease, font-size .18s ease, line-height .18s ease; }
+  .field input, .btn-lg, .btn-sm, .segmented button { transition: border-color .15s, box-shadow .15s, background-color .15s; }
+  .toast { animation: rise .25s ease; }
+  @keyframes rise { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+}
+
+@media (max-width: 1068px) {
+  .config-inner { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .stage { position: static; }
+  .steps { width: 100%; max-width: 680px; margin: 0 auto; }
+}
+@media (max-width: 734px) {
+  .nav-inner { padding-inline: 16px; }
+  .nav-title { font-size: 19px; }
+  .hero { padding-inline: 16px; padding-block: 40px 44px; }
+  .hero h1 { font-size: 21px; }
+  .config { padding-inline: 16px; padding-block: 32px 64px; }
+  .canvas-wrap { overflow-x: auto; border-radius: 14px; }
+  canvas { min-width: 600px; }
+  .foot { padding-inline: 16px; }
+}
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+// In-game research icons (black-and-white versions), tinted green, yellow and red at 45%.
+const ICONS = __ICONS__;
+
+const NAMES = {
+  slinger: "Slinger", archer: "Archer", city_guard: "City Guard",
+  hoplite: "Hoplite", meteorology: "Meteorology",
+  espionage: "Espionage", booty: "Booty", ceramics: "Ceramics",
+  horseman: "Horseman", architecture: "Architecture", trainer: "Trainer",
+  bireme: "Bireme", crane: "Crane", shipwright: "Shipwright", colony_ship: "Colony Ship",
+  chariot: "Chariot", light_ship: "Light Ship", conscription: "Conscription",
+  fire_ship: "Fire Ship", catapult: "Catapult", cryptography: "Cryptography", democracy: "Democracy",
+  light_transport_ships: "Light Transport", plow: "Plow", bunks: "Bunks",
+  trireme: "Trireme", phalanx: "Phalanx", breakthrough: "Breakthrough", mathematics: "Mathematics",
+  ram: "Ram", cartography: "Cartography", revolt: "Revolt", conquest: "Conquest",
+  stone_hail: "Stone Hail", temple_looting: "Temple Looting", divine_selection: "Divine Selection",
+  battle_experience: "Battle Experience", strong_wine: "Strong Wine", set_sail: "Set Sail",
+};
+// Academy level columns in the in-game order. Revolt worlds research Revolt at 28.
+// Conquest worlds research Conquest there instead, and add Democracy at 19.
+const COLUMNS = [
+  [1,  ["slinger", "archer", "city_guard"]],
+  [4,  ["hoplite", "meteorology"]],
+  [7,  ["espionage", "booty", "ceramics"]],
+  [10, ["horseman", "architecture", "trainer"]],
+  [13, ["bireme", "crane", "shipwright", "colony_ship"]],
+  [16, ["chariot", "light_ship", "conscription"]],
+  [19, ["fire_ship", "catapult", "cryptography", "democracy"]],
+  [22, ["light_transport_ships", "plow", "bunks"]],
+  [25, ["trireme", "phalanx", "breakthrough", "mathematics"]],
+  [28, ["ram", "cartography", "revolt"]],
+  [31, ["stone_hail", "temple_looting", "divine_selection"]],
+  [34, ["battle_experience", "strong_wine", "set_sail"]],
+];
+function visibleColumns(world) {
+  return COLUMNS.map(([lv, ids]) => [lv, ids.flatMap(id => {
+    if (id === "democracy") return world === "conquest" ? [id] : [];
+    if (id === "revolt") return [world === "conquest" ? "conquest" : "revolt"];
+    return [id];
+  })]);
+}
+const ALL_IDS = Object.keys(NAMES);
+const TINT = { g: "rgb(40,200,70)", y: "rgb(255,200,0)", r: "rgb(225,35,35)" }; // same colours as the tinted icons
+const NEXT = { g: "y", y: "r", r: "g" };
+const COLOR_WORD = { g: "green", y: "yellow", r: "red" };
+
+const FINISHES = {
+  graphite: { name: "Graphite", note: "Looks best in Discord's dark mode.", chip: "#1d1d1f",
+              bg: "#000000", fg: "#f5f5f7", fg2: "#a1a1a6", panelLine: "rgba(255,255,255,.14)" },
+  silver:   { name: "Silver",   note: "Bright and clean, for light mode.", chip: "#e3e4e6",
+              bg: "#f5f5f7", fg: "#1d1d1f", fg2: "#6e6e73", panelLine: "rgba(0,0,0,.10)", shadow: "rgba(60,40,10,.18)" },
+  parchment: { name: "Parchment", note: "Feels like the game itself.", chip: "#e9d6a6",
+               bg: "#f3e5c3", paper: true, serif: true, fg: "#3b2a14", fg2: "#6b5430", panelLine: "rgba(90,60,20,.18)", shadow: "rgba(90,60,20,.22)" },
+};
+const WORLDS = {
+  revolt:   { name: "Revolt",   note: "Revolt worlds research Revolt at level 28." },
+  conquest: { name: "Conquest", note: "Conquest worlds research Conquest at level 28 and add Democracy at level 19." },
+};
+
+// The alliance's current plan, read from the marked-up screenshot
+const EXAMPLE = Object.fromEntries(ALL_IDS.map(id => [id, "g"]));
+Object.assign(EXAMPLE, { chariot: "y", light_transport_ships: "y", fire_ship: "r", cryptography: "r", trireme: "r", breakthrough: "r" });
+
+const DEFAULT_STATE = {
+  states: EXAMPLE, title: "", note: "",
+  labels: { g: "Research", y: "Optional", r: "Don't research" },
+  world: "revolt", finish: "parchment",
+};
+const KEY = "grepo-research-plan-v4";
+function loadState() {
+  try {
+    const own = localStorage.getItem(KEY);
+    const raw = own || localStorage.getItem("grepo-research-plan-v3") || localStorage.getItem("grepo-research-plan-v2") || localStorage.getItem("grepo-research-plan-v1");
+    const s = JSON.parse(raw || "null");
+    if (s && s.states) {
+      return {
+        ...DEFAULT_STATE,
+        states: { ...EXAMPLE, ...s.states },
+        title: s.title || "", note: s.note || "",
+        labels: { ...DEFAULT_STATE.labels, ...(s.labels || {}) },
+        world: WORLDS[s.world] ? s.world : (s.extras ? "conquest" : "revolt"),
+        // older saves were made when Graphite was the default, so only a v4 save keeps its finish
+        finish: own && FINISHES[s.finish] ? s.finish : DEFAULT_STATE.finish,
+      };
+    }
+  } catch (e) {}
+  return DEFAULT_STATE;
+}
+
+function loadIcons() {
+  const out = {}, jobs = [];
+  for (const [id, set] of Object.entries(ICONS)) {
+    out[id] = {};
+    for (const k of ["g", "y", "r"]) {
+      jobs.push(new Promise(res => {
+        const im = new Image();
+        im.onload = () => { out[id][k] = im; res(); };
+        im.onerror = () => res();
+        im.src = set[k];
+      }));
+    }
+  }
+  return Promise.all(jobs).then(() => out);
+}
+
+// ---------- drawing the image ----------
+// Outer frame: clean and Apple-like. Research grid: the in-game academy panel.
+const SCALE = 2, PX = 40, PT = 40, PB = 34;
+const TILE = 50, FRAME = 3, FS = TILE + 2 * FRAME;   // icon, frame width, framed size
+const CW = 66, RG = 10, ROW = FS + RG;                // column width, row gap, row pitch
+const PP = 12, HEAD = 34, PBOT = 14, PR = 10;         // panel padding, header height, bottom padding, radius
+const SANS = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif';
+const GAME = 'Verdana, Geneva, Tahoma, sans-serif';
+const SERIF = 'Georgia, "Times New Roman", serif';
+
+function track(ctx, px) { if ("letterSpacing" in ctx) ctx.letterSpacing = px + "px"; }
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function wrapLines(ctx, text, maxW) {
+  const words = text.split(/\s+/); const lines = []; let cur = "";
+  for (const w of words) {
+    const t = cur ? cur + " " + w : w;
+    if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function drawPanel(ctx, f, x, y, w, h, cols) {
+  if (f.shadow) {
+    ctx.save(); ctx.shadowColor = f.shadow; ctx.shadowBlur = 18; ctx.shadowOffsetY = 4;
+    ctx.fillStyle = "#efdcae"; rr(ctx, x, y, w, h, PR); ctx.fill(); ctx.restore();
+  }
+  ctx.save();
+  rr(ctx, x, y, w, h, PR); ctx.clip();
+  // parchment
+  const g = ctx.createLinearGradient(0, y, 0, y + h);
+  g.addColorStop(0, "#f8eccb"); g.addColorStop(1, "#efdcab");
+  ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+  const vg = ctx.createRadialGradient(x + w / 2, y + h / 2, Math.min(w, h) * .25, x + w / 2, y + h / 2, Math.max(w, h) * .62);
+  vg.addColorStop(0, "rgba(255,250,236,.30)"); vg.addColorStop(1, "rgba(150,108,40,.20)");
+  ctx.fillStyle = vg; ctx.fillRect(x, y, w, h);
+  // paper grain, seeded so every render is identical
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0, n = Math.round(w * h / 80); i < n; i++) {
+    ctx.fillStyle = rnd() < .55 ? "rgba(120,84,28,.08)" : "rgba(255,255,255,.12)";
+    ctx.fillRect(x + rnd() * w, y + rnd() * h, 1, 1);
+  }
+  // embossed column dividers
+  for (let ci = 1; ci < cols.length; ci++) {
+    const sx = Math.round(x + PP + ci * CW);
+    ctx.fillStyle = "rgba(146,108,46,.55)"; ctx.fillRect(sx - 1, y + 8, 1, h - 16);
+    ctx.fillStyle = "rgba(255,248,226,.85)"; ctx.fillRect(sx, y + 8, 1, h - 16);
+  }
+  ctx.restore();
+  ctx.strokeStyle = "#a9864c"; ctx.lineWidth = 1; rr(ctx, x + .5, y + .5, w - 1, h - 1, PR); ctx.stroke();
+  ctx.strokeStyle = f.panelLine; rr(ctx, x - .5, y - .5, w + 1, h + 1, PR + 1); ctx.stroke();
+
+  // level headers, "1 · ·" as in the game
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  cols.forEach(([lv], ci) => {
+    const lx = x + PP + ci * CW + 7, ly = y + HEAD / 2 + 1;
+    ctx.font = "bold 14px " + GAME; ctx.fillStyle = "#2b1d0c";
+    ctx.fillText(String(lv), lx, ly);
+    const e = lx + ctx.measureText(String(lv)).width;
+    ctx.fillStyle = "#5b4220";
+    [e + 9, e + 19].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, 1.4, 0, Math.PI * 2); ctx.fill(); });
+  });
+}
+
+function drawTile(ctx, imgs, id, s, x, y) {
+  ctx.save();
+  ctx.shadowColor = "rgba(60,38,8,.5)"; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1.5;
+  ctx.fillStyle = "#33230f"; ctx.fillRect(x, y, FS, FS);
+  ctx.restore();
+  ctx.fillStyle = "#8c6b37"; ctx.fillRect(x + 1, y + 1, FS - 2, FS - 2);   // bevel
+  ctx.fillStyle = "#2a1b09"; ctx.fillRect(x + 2, y + 2, FS - 4, FS - 4);
+  const im = imgs[id] && imgs[id][s];
+  if (im) ctx.drawImage(im, x + FRAME, y + FRAME, TILE, TILE);
+  else { ctx.fillStyle = TINT[s]; ctx.fillRect(x + FRAME, y + FRAME, TILE, TILE); }
+}
+
+function render(canvas, st, imgs, deco) {
+  const f = FINISHES[st.finish] || FINISHES.graphite;
+  const cols = visibleColumns(st.world);
+  const rows = Math.max(...cols.map(c => c[1].length));
+  const panelW = PP * 2 + cols.length * CW;
+  const W = PX * 2 + panelW;
+  const title = st.title.trim(), note = st.note.trim();
+
+  const m = canvas.getContext("2d");
+  m.font = "400 17px " + (f.serif ? SERIF : SANS);
+  const noteLines = note ? wrapLines(m, note, W - PX * 2) : [];
+  let headH = 0;
+  if (title) headH += 38;
+  if (noteLines.length) headH += (title ? 6 : 0) + noteLines.length * 24;
+  if (headH) headH += 26;
+  const panelX = PX, panelY = PT + headH;
+  const panelH = HEAD + rows * FS + (rows - 1) * RG + PBOT;
+  const legendTop = panelY + panelH + 26;
+  const H = legendTop + 20 + PB;
+
+  canvas.width = W * SCALE; canvas.height = H * SCALE;
+  canvas.dataset.w = W; canvas.dataset.h = H;
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  if (f.paper) {
+    const pg = ctx.createLinearGradient(0, 0, 0, H);
+    pg.addColorStop(0, "#f7ebcd"); pg.addColorStop(1, "#efdfb6");
+    ctx.fillStyle = pg; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "#a8874a"; ctx.lineWidth = 2; ctx.strokeRect(1, 1, W - 2, H - 2);
+  } else { ctx.fillStyle = f.bg; ctx.fillRect(0, 0, W, H); }
+
+  // title and note
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  let y = PT;
+  if (title) {
+    ctx.font = f.serif ? "700 32px " + SERIF : "600 32px " + SANS; track(ctx, f.serif ? 0 : -0.6);
+    ctx.fillStyle = f.fg; ctx.fillText(title, PX, y + 29, W - PX * 2); track(ctx, 0);
+    y += 38 + (noteLines.length ? 6 : 0);
+  }
+  if (noteLines.length) {
+    ctx.font = "400 17px " + (f.serif ? SERIF : SANS); track(ctx, f.serif ? 0 : -0.3); ctx.fillStyle = f.fg2;
+    noteLines.forEach((l, i) => ctx.fillText(l, PX, y + 18 + i * 24)); track(ctx, 0);
+  }
+
+  // the research grid, in the in-game style
+  drawPanel(ctx, f, panelX, panelY, panelW, panelH, cols);
+  const hits = [];
+  cols.forEach(([, ids], ci) => ids.forEach((id, ri) => {
+    const cx = panelX + PP + ci * CW;
+    const tx = cx + (CW - FS) / 2, ty = panelY + HEAD + ri * ROW;
+    drawTile(ctx, imgs, id, st.states[id] || "g", tx, ty);
+    if (deco && (deco.hover === id || deco.focus === id)) {
+      ctx.strokeStyle = "#0071e3"; ctx.lineWidth = 2.5; rr(ctx, tx - 4, ty - 4, FS + 8, FS + 8, 6); ctx.stroke();
+    }
+    hits.push({ id, ci, ri, x: cx, y: ty - RG / 2, w: CW, h: FS + RG });
+  }));
+
+  // legend
+  const ly = legendTop + 10;
+  let lx = PX;
+  ctx.font = f.serif ? "400 15px " + SERIF : "500 15px " + SANS; track(ctx, f.serif ? 0 : -0.2); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ["g", "y", "r"].forEach(k => {
+    const label = (st.labels[k] || "").trim(); if (!label) return;
+    ctx.fillStyle = TINT[k]; ctx.beginPath(); ctx.arc(lx + 6, ly, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = f.fg; ctx.fillText(label, lx + 18, ly + .5);
+    lx += 18 + ctx.measureText(label).width + 28;
+  });
+  track(ctx, 0); ctx.textBaseline = "alphabetic";
+  return hits;
+}
+
+// ---------- app ----------
+const { useState, useEffect, useRef, useMemo } = React;
+const html = htm.bind(React.createElement);
+const slug = s => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+
+function App() {
+  const [st, setSt] = useState(loadState);
+  const [imgs, setImgs] = useState(null);
+  const [hover, setHover] = useState(null);
+  const [pos, setPos] = useState({ c: 0, r: 0 });
+  const [focused, setFocused] = useState(false);
+  const [kbd, setKbd] = useState(false);
+  const [toast, setToast] = useState(null);
+  const canvasRef = useRef(null), hitsRef = useRef([]), dlRef = useRef(null), toastTimer = useRef(0);
+
+  const cols = useMemo(() => visibleColumns(st.world), [st.world]);
+  const focusCol = cols[Math.min(pos.c, cols.length - 1)][1];
+  const focusId = focusCol[Math.min(pos.r, focusCol.length - 1)];
+
+  useEffect(() => {
+    loadIcons().then(setImgs);
+    (async () => {
+      try { dlRef.current = window.claude && window.claude.use ? await window.claude.use("downloads") : null; }
+      catch (e) { dlRef.current = null; }
+    })();
+  }, []);
+  useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }, [st]);
+  useEffect(() => {
+    if (imgs && canvasRef.current) hitsRef.current = render(canvasRef.current, st, imgs, { hover, focus: focused && kbd ? focusId : null });
+  }, [st, imgs, hover, focused, kbd, focusId]);
+
+  const set = patch => setSt(s => ({ ...s, ...patch }));
+  const say = msg => { setToast(msg); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(null), 3200); };
+  const cycle = id => setSt(s => ({ ...s, states: { ...s.states, [id]: NEXT[s.states[id] || "g"] } }));
+
+  const hitAt = e => {
+    const c = canvasRef.current; if (!c) return null;
+    const r = c.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (+c.dataset.w / r.width), y = (e.clientY - r.top) * (+c.dataset.h / r.height);
+    return hitsRef.current.find(h => x >= h.x && x < h.x + h.w && y >= h.y && y < h.y + h.h) || null;
+  };
+  const onClick = e => { const h = hitAt(e); if (!h) return; setPos({ c: h.ci, r: h.ri }); cycle(h.id); };
+  const onMove = e => {
+    const h = hitAt(e), id = h ? h.id : null;
+    if (id !== hover) setHover(id);
+    e.currentTarget.style.cursor = h ? "pointer" : "default";
+  };
+  const onKey = e => {
+    const k = e.key;
+    setKbd(true);
+    if (k === "ArrowLeft" || k === "ArrowRight") {
+      e.preventDefault();
+      const c = Math.max(0, Math.min(cols.length - 1, pos.c + (k === "ArrowRight" ? 1 : -1)));
+      setPos({ c, r: Math.min(pos.r, cols[c][1].length - 1) });
+    } else if (k === "ArrowUp" || k === "ArrowDown") {
+      e.preventDefault();
+      setPos({ c: pos.c, r: Math.max(0, Math.min(focusCol.length - 1, pos.r + (k === "ArrowDown" ? 1 : -1))) });
+    } else if (k === "Enter" || k === " ") { e.preventDefault(); cycle(focusId); }
+  };
+
+  const shownId = hover || (focused && kbd ? focusId : null);
+  const counts = { g: 0, y: 0, r: 0 };
+  cols.forEach(([, ids]) => ids.forEach(id => counts[st.states[id] || "g"]++));
+
+  const exportBlob = () => new Promise(res => {
+    const off = document.createElement("canvas");
+    render(off, st, imgs, null);
+    off.toBlob(res, "image/png");
+  });
+  const fname = () => (slug(st.title) || "research-plan") + ".png";
+  const download = async () => {
+    if (!imgs) return;
+    const d = dlRef.current;
+    if (!d && !window.claude) {
+      // a normal web page (GitHub Pages or a local file): plain browser download
+      const url = URL.createObjectURL(await exportBlob());
+      const a = document.createElement("a");
+      a.href = url; a.download = fname();
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      say("Saved " + fname());
+      return;
+    }
+    if (!d) { say("Saving isn't available here. Right-click the image and choose Save Image As."); return; }
+    try {
+      const r = await d.save({ filename: fname(), data: await exportBlob() });
+      say(r && r.status === "delivered" ? "Sent." : "Saved " + fname());
+    } catch (e) {
+      const code = e && e.code;
+      if (code === "declined") say("Download cancelled.");
+      else if (code === "rate_limited") say("A save prompt is already open.");
+      else say("Saving isn't available here. Right-click the image and choose Save Image As.");
+    }
+  };
+  const copy = () => {
+    if (!imgs) return;
+    try {
+      navigator.clipboard.write([new ClipboardItem({ "image/png": exportBlob() })]).then(
+        () => say("Image copied. Paste it into Discord."),
+        () => say("Copying isn't allowed here. Use Download instead.")
+      );
+    } catch (e) { say("Copying isn't allowed here. Use Download instead."); }
+  };
+
+  const fin = FINISHES[st.finish];
+  const shownState = shownId ? (st.states[shownId] || "g") : null;
+
+  return html`
+    <nav class="nav" aria-label="Research Planner">
+      <div class="nav-inner">
+        <p class="nav-title">Research Planner</p>
+        <div class="nav-actions">
+          <button class="nav-link" type="button" onClick=${copy}>Copy</button>
+          <button class="btn-sm" type="button" onClick=${download}>Download</button>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <h1>Research Planner</h1>
+      <p class="headline">Every research. One clear plan.</p>
+      <p class="lede">Mark each research <b>green, yellow or red</b>, add a title, and <b>download one image</b> your whole alliance can follow.</p>
+    </header>
+
+    <main class="config">
+      <div class="config-inner">
+        <section class="stage" aria-label="Preview">
+          <div class="canvas-wrap">
+            <canvas ref=${canvasRef} tabIndex="0" role="application"
+              aria-label="Research plan. Use the arrow keys to move between researches and Enter to change one."
+              aria-describedby="readout"
+              onClick=${onClick} onMouseMove=${onMove} onMouseLeave=${() => setHover(null)}
+              onMouseDown=${() => setKbd(false)} onKeyDown=${onKey}
+              onFocus=${e => { setFocused(true); setKbd(e.currentTarget.matches(":focus-visible")); }} onBlur=${() => setFocused(false)}></canvas>
+          </div>
+          <div class="stage-foot">
+            <p class="readout" id="readout" aria-live="polite">${shownId
+              ? html`<b>${NAMES[shownId]}</b>${" · " + (st.labels[shownState] || COLOR_WORD[shownState])}`
+              : "Click a research to cycle it through green, yellow and red."}</p>
+            <p class="counts" aria-label=${counts.g + " green, " + counts.y + " yellow, " + counts.r + " red"}>
+              <span><i class="dot g"></i>${counts.g}</span><span><i class="dot y"></i>${counts.y}</span><span><i class="dot r"></i>${counts.r}</span>
+            </p>
+          </div>
+        </section>
+
+        <div class="steps">
+          <section class="step">
+            <h2>Title. <span class="dim">Name this plan.</span></h2>
+            <div class="fields">
+              <div class="field">
+                <input id="title" type="text" placeholder=" " maxlength="60" autocomplete="off" value=${st.title} onChange=${e => set({ title: e.target.value })} />
+                <label for="title">Title</label>
+              </div>
+              <div class="field">
+                <input id="note" type="text" placeholder=" " maxlength="160" autocomplete="off" value=${st.note} onChange=${e => set({ note: e.target.value })} />
+                <label for="note">Note (optional)</label>
+              </div>
+            </div>
+            <p class="help">${"Shown at the top of the image, for example “Bireme only city”."}</p>
+          </section>
+
+          <section class="step">
+            <h2>World. <span class="dim">Revolt or conquest.</span></h2>
+            <div class="segmented" role="radiogroup" aria-label="Conquest system">
+              ${Object.entries(WORLDS).map(([k, w]) => html`
+                <button key=${k} type="button" role="radio" aria-checked=${st.world === k} onClick=${() => set({ world: k })}>${w.name}</button>`)}
+            </div>
+            <p class="help">${WORLDS[st.world].note}</p>
+          </section>
+
+          <section class="step">
+            <h2>Legend. <span class="dim">Name each colour.</span></h2>
+            <div class="fields">
+              ${["g", "y", "r"].map(k => html`
+                <div class="field with-dot" key=${k}>
+                  <i class=${"dot " + k} aria-hidden="true"></i>
+                  <input id=${"legend-" + k} type="text" placeholder=" " maxlength="30" autocomplete="off" value=${st.labels[k]}
+                    onChange=${e => { const v = e.target.value; setSt(s => ({ ...s, labels: { ...s.labels, [k]: v } })); }} />
+                  <label for=${"legend-" + k}>${COLOR_WORD[k][0].toUpperCase() + COLOR_WORD[k].slice(1)}</label>
+                </div>`)}
+            </div>
+          </section>
+
+          <section class="step">
+            <h2>Finish. <span class="dim">Pick a look.</span></h2>
+            <div class="finishes" role="radiogroup" aria-label="Image finish">
+              ${Object.entries(FINISHES).map(([k, f]) => html`
+                <button key=${k} class="swatch" type="button" role="radio" aria-checked=${st.finish === k} aria-label=${f.name}
+                  title=${f.name} onClick=${() => set({ finish: k })}><span class="chip" style=${{ background: f.chip }}></span></button>`)}
+            </div>
+            <p class="finish-name"><b>${fin.name}</b>${fin.note}</p>
+          </section>
+
+          <section class="step cta">
+            <button class="btn-lg" type="button" onClick=${download}>Download image</button>
+            <button class="link" type="button" onClick=${copy}>${"Copy image ›"}</button>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="foot">
+      <div class="foot-inner">
+        <p>Research icons are from Grepolis, a game by InnoGames. This planner is a fan-made tool and isn't affiliated with InnoGames.</p>
+        <p>Your choices are saved in this browser only.</p>
+      </div>
+    </footer>
+
+    <div role="status" aria-live="polite">${toast ? html`<div class="toast">${toast}</div>` : null}</div>`;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${App} />`);
+</script>
