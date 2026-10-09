@@ -378,13 +378,12 @@ function drawLevels(ctx, f, cols, top, bottom) {
   }
   ctx.textBaseline = "middle";
   cols.forEach(([lv], ci) => {
-    const lx = PX + ci * CW + 7, ly = top + 12;
+    // number, dot, dot: three evenly spaced items centred over the column (the number counts as one item)
+    const cx = PX + ci * CW + CW / 2, ly = top + 12, step = 15;
     ctx.font = f.paper ? "bold 14px " + GAME : "600 14px " + SANS;
-    // every number sits right-aligned in a two-digit slot, so "1 · ·" lines up with "10 · ·"
-    const e = lx + ctx.measureText("00").width;
-    ctx.textAlign = "right"; ctx.fillStyle = f.level; ctx.fillText(String(lv), e, ly);
+    ctx.textAlign = "center"; ctx.fillStyle = f.level; ctx.fillText(String(lv), cx - step, ly);
     ctx.fillStyle = f.levelDot;
-    [e + 9, e + 19].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, 1.4, 0, Math.PI * 2); ctx.fill(); });
+    [cx, cx + step].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, 1.4, 0, Math.PI * 2); ctx.fill(); });
   });
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 }
