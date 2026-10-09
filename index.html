@@ -387,12 +387,16 @@ function drawLevels(ctx, f, cols, top, bottom) {
   }
   ctx.textBaseline = "middle";
   cols.forEach(([lv], ci) => {
-    // number, dot, dot: three evenly spaced items centred over the column (the number counts as one item)
-    const cx = PX + ci * CW + CW / 2, ly = top + 12, step = 15;
+    // number, dot, dot laid out like CSS justify-content: space-evenly across the column:
+    // the same gap before, between and after the items
+    const left = PX + ci * CW, ly = top + 12, d = 2.8;
     ctx.font = f.paper ? "bold 14px " + GAME : "600 14px " + SANS;
-    ctx.textAlign = "center"; ctx.fillStyle = f.level; ctx.fillText(String(lv), cx - step, ly);
+    const w = ctx.measureText(String(lv)).width;
+    const gap = (CW - w - 2 * d) / 4;
+    ctx.textAlign = "left"; ctx.fillStyle = f.level; ctx.fillText(String(lv), left + gap, ly);
     ctx.fillStyle = f.levelDot;
-    [cx, cx + step].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, 1.4, 0, Math.PI * 2); ctx.fill(); });
+    const d1 = left + gap + w + gap + d / 2, d2 = d1 + d + gap;
+    [d1, d2].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, d / 2, 0, Math.PI * 2); ctx.fill(); });
   });
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 }
