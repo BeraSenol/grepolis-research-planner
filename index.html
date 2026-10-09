@@ -78,13 +78,13 @@ button { font: inherit; letter-spacing: inherit; }
 .btn-sm:hover { background: var(--blue-hover); }
 
 /* hero */
-.hero { background: var(--hero-bg); color: var(--hero-fg); text-align: center; padding-inline: 22px; padding-block: 56px; }
-.hero h1 { font-family: var(--display); font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: .007em; margin: 0 0 12px; }
+.hero { background: var(--hero-bg); color: var(--hero-fg); text-align: center; padding-inline: 22px; padding-block: 32px; }
+.hero h1 { font-family: var(--display); font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: .007em; margin: 0 0 8px; }
 .lede { font-family: var(--display); font-size: clamp(17px, 1.7vw, 21px); line-height: 1.38; font-weight: 600; letter-spacing: .011em; color: var(--hero-fg-2); max-width: 640px; margin: 0 auto; text-wrap: balance; }
 .lede b { color: var(--hero-fg); font-weight: 600; }
 
 /* configurator */
-.config { padding-inline: 22px; padding-block: 48px 88px; }
+.config { padding-inline: 22px; padding-block: 36px 88px; }
 .config-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 56px; align-items: start; }
 .stage { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 52px + 28px); min-width: 0; }
 .canvas-wrap { border-radius: 18px; overflow: hidden; box-shadow: var(--stage-shadow); }
@@ -175,9 +175,9 @@ canvas { display: block; width: 100%; height: auto; outline: none; touch-action:
 @media (max-width: 734px) {
   .nav-inner { padding-inline: 16px; }
   .nav-title { font-size: 19px; }
-  .hero { padding-inline: 16px; padding-block: 40px; }
+  .hero { padding-inline: 16px; padding-block: 24px; }
   .hero h1 { font-size: 21px; }
-  .config { padding-inline: 16px; padding-block: 32px 64px; }
+  .config { padding-inline: 16px; padding-block: 24px 64px; }
   .canvas-wrap { overflow-x: auto; border-radius: 14px; }
   canvas { min-width: 600px; }
   .foot { padding-inline: 16px; }
