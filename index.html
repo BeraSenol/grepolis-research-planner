@@ -103,6 +103,12 @@ canvas { display: block; width: 100%; height: auto; outline: none; touch-action:
 .counts span { display: inline-flex; align-items: center; gap: 6px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
 .dot.g { background: var(--g); } .dot.y { background: var(--y); } .dot.r { background: var(--r); }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.stat { display: grid; gap: 2px; align-content: start; min-width: 0; }
+.stat-label { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; line-height: 1.33; letter-spacing: -0.01em; color: var(--fg-2); }
+.stat-value { margin: 0; font-family: var(--display); font-size: 32px; line-height: 1.12; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.stat-value .extra { font-size: 19px; font-weight: 500; letter-spacing: -0.016em; color: var(--fg-3); }
+.stat-note { margin: 2px 0 0; font-size: 12px; line-height: 1.33; letter-spacing: -0.01em; color: var(--fg-2); }
 
 .steps { min-width: 0; display: grid; }
 .step { display: grid; gap: 16px; padding-block: 28px; border-top: 1px solid var(--line); }
@@ -248,6 +254,35 @@ const WORLDS = {
   conquest: { name: "Conquest", note: "Conquest worlds research Conquest at level 28 and add Democracy at level 19." },
 };
 
+// Research points per research, from the Grepolis wiki research table.
+// Conquest costs 0 there; Revolt is assumed to cost the same.
+const RP = {
+  slinger: 4, archer: 8, city_guard: 3, hoplite: 8, meteorology: 4,
+  espionage: 3, booty: 3, ceramics: 4, horseman: 8, architecture: 6, trainer: 4,
+  bireme: 8, crane: 4, shipwright: 6, colony_ship: 0, chariot: 8, light_ship: 8, conscription: 4,
+  fire_ship: 8, catapult: 8, cryptography: 6, democracy: 6, light_transport_ships: 8, plow: 4, bunks: 6,
+  trireme: 8, phalanx: 9, breakthrough: 6, mathematics: 6, ram: 10, cartography: 8, revolt: 0, conquest: 0,
+  stone_hail: 4, temple_looting: 6, divine_selection: 10, battle_experience: 6, strong_wine: 4, set_sail: 8,
+};
+// Every Academy level gives 4 research points, up to 144 at level 36. A Library adds 12.
+const RP_PER_LEVEL = 4, ACADEMY_MAX = 36, LIBRARY_RP = 12, ACADEMY_RP = ACADEMY_MAX * RP_PER_LEVEL;
+
+function planStats(st) {
+  let green = 0, yellow = 0, unlock = 0, unlockId = null;
+  for (const [lv, ids] of visibleColumns(st.world)) {
+    for (const id of ids) {
+      const s = st.states[id] || "g";
+      if (s === "g") { green += RP[id]; if (lv > unlock) { unlock = lv; unlockId = id; } }
+      else if (s === "y") yellow += RP[id];
+    }
+  }
+  const library = green > ACADEMY_RP;                     // the Academy alone can't give enough points
+  const over = green > ACADEMY_RP + LIBRARY_RP;           // not even with a Library
+  const byPoints = Math.ceil(Math.max(0, green - (library ? LIBRARY_RP : 0)) / RP_PER_LEVEL);
+  const level = over ? null : Math.max(byPoints, unlock); // enough points, and every green research unlocked
+  return { green, yellow, unlock, unlockId, byPoints, level, library, over };
+}
+
 // The alliance's current plan, read from the marked-up screenshot
 const EXAMPLE = Object.fromEntries(ALL_IDS.map(id => [id, "g"]));
 Object.assign(EXAMPLE, { chariot: "y", light_transport_ships: "y", fire_ship: "r", cryptography: "r", trireme: "r", breakthrough: "r" });
@@ -375,6 +410,27 @@ function drawTile(ctx, imgs, id, s, x, y) {
   else { ctx.fillStyle = TINT[s]; ctx.fillRect(x + FRAME, y + FRAME, TILE, TILE); }
 }
 
+// "Research points 112 (+16) · Academy level 28" as [text, bold] pieces
+function summarySegments(stats) {
+  const segs = [["Research points ", false], [String(stats.green), true]];
+  if (stats.yellow) segs.push([" (+" + stats.yellow + ")", false]);
+  segs.push(["   ·   ", false]);
+  if (stats.over) segs.push(["Over the 156-point limit", true]);
+  else {
+    segs.push(["Academy level ", false], [stats.level ? String(stats.level) : "–", true]);
+    if (stats.library) segs.push([" + Library", false]);
+  }
+  return segs;
+}
+function segFont(f, bold) {
+  return f.serif ? (bold ? "700 15px " : "400 15px ") + SERIF : (bold ? "600 15px " : "400 15px ") + SANS;
+}
+function segWidth(ctx, f, segs) {
+  let w = 0;
+  for (const [t, b] of segs) { ctx.font = segFont(f, b); w += ctx.measureText(t).width; }
+  return w;
+}
+
 function render(canvas, st, imgs, deco) {
   const f = FINISHES[st.finish] || FINISHES.graphite;
   const cols = visibleColumns(st.world);
@@ -393,7 +449,16 @@ function render(canvas, st, imgs, deco) {
   const panelX = PX, panelY = PT + headH;
   const panelH = HEAD + rows * FS + (rows - 1) * RG + PBOT;
   const legendTop = panelY + panelH + 26;
-  const H = legendTop + 20 + PB;
+
+  // legend on the left, plan summary on the right; the summary drops to its own row if they don't fit
+  const legendFont = f.serif ? "400 15px " + SERIF : "500 15px " + SANS;
+  const labels = ["g", "y", "r"].map(k => [k, (st.labels[k] || "").trim()]).filter(([, l]) => l);
+  m.font = legendFont;
+  const legendW = labels.reduce((w, [, l]) => w + 18 + m.measureText(l).width + 28, 0) - (labels.length ? 28 : 0);
+  const segs = summarySegments(planStats(st));
+  const sumW = segWidth(m, f, segs);
+  const oneRow = !labels.length || legendW + 40 + sumW <= W - PX * 2;
+  const H = legendTop + 20 + (oneRow ? 0 : 30) + PB;
 
   canvas.width = W * SCALE; canvas.height = H * SCALE;
   canvas.dataset.w = W; canvas.dataset.h = H;
@@ -436,14 +501,23 @@ function render(canvas, st, imgs, deco) {
   // legend
   const ly = legendTop + 10;
   let lx = PX;
-  ctx.font = f.serif ? "400 15px " + SERIF : "500 15px " + SANS; track(ctx, f.serif ? 0 : -0.2); ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  ["g", "y", "r"].forEach(k => {
-    const label = (st.labels[k] || "").trim(); if (!label) return;
+  ctx.font = legendFont; track(ctx, f.serif ? 0 : -0.2); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  labels.forEach(([k, label]) => {
     ctx.fillStyle = TINT[k]; ctx.beginPath(); ctx.arc(lx + 6, ly, 6, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = f.fg; ctx.fillText(label, lx + 18, ly + .5);
     lx += 18 + ctx.measureText(label).width + 28;
   });
-  track(ctx, 0); ctx.textBaseline = "alphabetic";
+  track(ctx, 0);
+
+  // plan summary
+  let sx = !labels.length ? PX : oneRow ? W - PX - sumW : PX;
+  const sy = oneRow ? ly : ly + 30;
+  for (const [t, bold] of segs) {
+    ctx.font = segFont(f, bold); ctx.fillStyle = bold ? f.fg : f.fg2;
+    ctx.fillText(t, sx, sy + .5);
+    sx += ctx.measureText(t).width;
+  }
+  ctx.textBaseline = "alphabetic";
   return hits;
 }
 
@@ -554,6 +628,13 @@ function App() {
   const fin = FINISHES[st.finish];
   const shownState = shownId ? (st.states[shownId] || "g") : null;
 
+  const stats = planStats(st);
+  let academyNote;
+  if (stats.over) academyNote = "More than one city can research: an Academy gives at most 144 points and a Library adds 12.";
+  else if (stats.library) academyNote = "More than an Academy's 144 points, so this city also needs a Library (+12).";
+  else if (stats.unlock > stats.byPoints) academyNote = NAMES[stats.unlockId] + " unlocks at level " + stats.unlock + ". The points alone need level " + stats.byPoints + ".";
+  else academyNote = "Each Academy level gives 4 research points.";
+
   return html`
     <nav class="nav" aria-label="Research Planner">
       <div class="nav-inner">
@@ -589,6 +670,20 @@ function App() {
             <p class="counts" aria-label=${counts.g + " green, " + counts.y + " yellow, " + counts.r + " red"}>
               <span><i class="dot g"></i>${counts.g}</span><span><i class="dot y"></i>${counts.y}</span><span><i class="dot r"></i>${counts.r}</span>
             </p>
+          </div>
+          <div class="stats" aria-live="polite">
+            <div class="stat">
+              <p class="stat-label"><i class="dot g" aria-hidden="true"></i>Research points</p>
+              <p class="stat-value">${stats.green}${stats.yellow ? html`<span class="extra">${" (+" + stats.yellow + ")"}</span>` : null}</p>
+              <p class="stat-note">${stats.yellow
+                ? "For the green researches. In brackets: what the yellow ones add."
+                : "For the green researches."}</p>
+            </div>
+            <div class="stat">
+              <p class="stat-label">Academy level</p>
+              <p class="stat-value">${stats.over || !stats.level ? "–" : stats.level}${stats.library && !stats.over ? html`<span class="extra"> + Library</span>` : null}</p>
+              <p class="stat-note">${academyNote}</p>
+            </div>
           </div>
         </section>
 
