@@ -69,15 +69,13 @@ button { font: inherit; letter-spacing: inherit; }
 .btn-sm:hover { background: var(--blue-hover); }
 
 /* hero */
-.hero { background: var(--hero-bg); color: var(--hero-fg); text-align: center; padding-inline: 22px; padding-block: 52px 60px; }
-.hero h1 { font-family: var(--display); font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: .007em; margin: 0 0 8px; }
+.hero { background: var(--hero-bg); color: var(--hero-fg); text-align: center; padding-inline: 22px; padding-block: 64px; }
+.hero h1 { font-family: var(--display); font-size: 28px; line-height: 1.14; font-weight: 600; letter-spacing: .007em; margin: 0 0 12px; }
 .headline {
   font-family: var(--display); font-size: clamp(38px, 5vw, 64px); line-height: 1.06; font-weight: 600; letter-spacing: -0.015em;
-  margin: 0 auto; max-width: 1000px; text-wrap: balance;
-  background: linear-gradient(90deg, #30d158 0%, #ffd60a 50%, #ff453a 100%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+  margin: 0 auto; max-width: 1000px; text-wrap: balance; color: var(--hero-fg);
 }
-.lede { font-family: var(--display); font-size: clamp(17px, 1.7vw, 21px); line-height: 1.38; font-weight: 600; letter-spacing: .011em; color: var(--hero-fg-2); max-width: 640px; margin: 16px auto 0; text-wrap: balance; }
+.lede { font-family: var(--display); font-size: clamp(17px, 1.7vw, 21px); line-height: 1.38; font-weight: 600; letter-spacing: .011em; color: var(--hero-fg-2); max-width: 640px; margin: 24px auto 0; text-wrap: balance; }
 .lede b { color: var(--hero-fg); font-weight: 600; }
 
 /* configurator */
@@ -172,7 +170,7 @@ canvas { display: block; width: 100%; height: auto; outline: none; touch-action:
 @media (max-width: 734px) {
   .nav-inner { padding-inline: 16px; }
   .nav-title { font-size: 19px; }
-  .hero { padding-inline: 16px; padding-block: 40px 44px; }
+  .hero { padding-inline: 16px; padding-block: 48px; }
   .hero h1 { font-size: 21px; }
   .config { padding-inline: 16px; padding-block: 32px 64px; }
   .canvas-wrap { overflow-x: auto; border-radius: 14px; }
@@ -414,11 +412,11 @@ function drawTile(ctx, f, imgs, id, s, x, y) {
   ctx.strokeStyle = f.stroke; ctx.lineWidth = 1; rr(ctx, tx + .5, ty + .5, TILE - 1, TILE - 1, R - .5); ctx.stroke();
 }
 
-// "Research points 112 (+16) · Academy level 28" as [text, bold] pieces
+// "Research points 112 (+16 optional) · Academy level 28" as [text, bold] pieces
 function summarySegments(stats) {
   const segs = [["Research points ", false], [String(stats.green), true]];
-  if (stats.yellow) segs.push([" (+" + stats.yellow + ")", false]);
-  segs.push(["   ·   ", false]);
+  if (stats.yellow) segs.push([" (+" + stats.yellow + " optional)", false]);
+  segs.push(["  ·  ", false]);
   if (stats.over) segs.push(["Over the 156-point limit", true]);
   else {
     segs.push(["Academy level ", false], [stats.level ? String(stats.level) : "–", true]);
@@ -677,9 +675,9 @@ function App() {
           <div class="stats" aria-live="polite">
             <div class="stat">
               <p class="stat-label"><i class="dot g" aria-hidden="true"></i>Research points</p>
-              <p class="stat-value">${stats.green}${stats.yellow ? html`<span class="extra">${" (+" + stats.yellow + ")"}</span>` : null}</p>
+              <p class="stat-value">${stats.green}${stats.yellow ? html`<span class="extra">${" (+" + stats.yellow + " optional)"}</span>` : null}</p>
               <p class="stat-note">${stats.yellow
-                ? "For the green researches. In brackets: what the yellow ones add."
+                ? "For the green researches, plus the optional ones in brackets."
                 : "For the green researches."}</p>
             </div>
             <div class="stat">
