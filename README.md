@@ -12,7 +12,7 @@ Open the planner at **https://berasenol.github.io/grepolis-research-planner/**, 
 - Pick **Revolt** or **Conquest**. Revolt worlds research Revolt at level 28. Conquest worlds research Conquest there instead and add Democracy at level 19.
 - Add a title and an optional note, for example "Bireme only city".
 - Rename the legend if you like. It says Research, Optional and Don't research by default.
-- Under the image, the planner adds up the research points for the green researches and shows in brackets what the yellow ones would add. It also works out the Academy level the city needs for all the greens: enough levels for the points (4 per level, at most 144 at level 36, plus 12 with a Library) and high enough to unlock every green research. The same summary is printed on the image. Point costs come from the Grepolis wiki's research table.
+- Under the image, the planner adds up the research points for the green researches and shows in brackets what the yellow ones would add. It also works out the Academy level the city needs for all the greens: enough levels for the points (4 per level, at most 144 at level 36, plus 12 with a Library) and high enough to unlock every green research. The same summary is printed on the image. While you plan, the page also shows how many points are left at that Academy level, so you can see how much room there is for optional researches. Point costs come from the Grepolis wiki's research table.
 - Pick a finish for the image: Parchment (the default), Graphite or Silver.
 - **Download image** saves a PNG. **Copy image** puts it on the clipboard so you can paste it straight into Discord.
 

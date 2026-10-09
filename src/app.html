@@ -88,7 +88,7 @@ canvas { display: block; width: 100%; height: auto; outline: none; touch-action:
 .counts span { display: inline-flex; align-items: center; gap: 6px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
 .dot.g { background: var(--g); } .dot.y { background: var(--y); } .dot.r { background: var(--r); }
-.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
 .stat { display: grid; gap: 2px; align-content: start; min-width: 0; }
 .stat-label { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; line-height: 1.33; letter-spacing: -0.01em; color: var(--fg-2); }
 .stat-value { margin: 0; font-family: var(--display); font-size: 32px; line-height: 1.12; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
@@ -175,6 +175,8 @@ canvas { display: block; width: 100%; height: auto; outline: none; touch-action:
   canvas { min-width: 600px; }
   .foot { padding-inline: 16px; }
   .stat-value { font-size: 28px; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stat:last-child { grid-column: 1 / -1; }
   .stat-value .extra { font-size: 16px; }
 }
 </style>
@@ -274,7 +276,10 @@ function planStats(st) {
   const over = green > ACADEMY_RP + LIBRARY_RP;           // not even with a Library
   const byPoints = Math.ceil(Math.max(0, green - (library ? LIBRARY_RP : 0)) / RP_PER_LEVEL);
   const level = over ? null : Math.max(byPoints, unlock); // enough points, and every green research unlocked
-  return { green, yellow, unlock, unlockId, byPoints, level, library, over };
+  // points the city has at that level, and what is left for optional researches
+  const available = over ? null : level * RP_PER_LEVEL + (library ? LIBRARY_RP : 0);
+  const spare = over ? null : available - green;
+  return { green, yellow, unlock, unlockId, byPoints, level, library, over, available, spare };
 }
 
 // The alliance's current plan, read from the marked-up screenshot
@@ -634,6 +639,19 @@ function App() {
   else if (stats.unlock > stats.byPoints) academyNote = NAMES[stats.unlockId] + " unlocks at level " + stats.unlock + ". The points alone need level " + stats.byPoints + ".";
   else academyNote = "Each Academy level gives 4 research points.";
 
+  let spareValue = "–", spareExtra = null, spareNote;
+  if (stats.over) spareNote = "The green researches don't fit in one city.";
+  else if (!stats.green) spareNote = "Mark researches green to see what's left.";
+  else {
+    spareValue = stats.spare;
+    if (stats.yellow) {
+      const left = stats.spare - stats.yellow;
+      spareExtra = left >= 0 ? " (" + left + " after optional)" : " (" + -left + " short for optional)";
+    }
+    spareNote = "At Academy " + stats.level + (stats.library ? " with a Library" : "") + " the city has " + stats.available +
+      " points. What's left can go to optional researches.";
+  }
+
   return html`
     <nav class="nav" aria-label="Research Planner">
       <div class="nav-inner">
@@ -681,6 +699,11 @@ function App() {
               <p class="stat-label">Academy level</p>
               <p class="stat-value">${stats.over || !stats.level ? "–" : stats.level}${stats.library && !stats.over ? html`<span class="extra"> + Library</span>` : null}</p>
               <p class="stat-note">${academyNote}</p>
+            </div>
+            <div class="stat">
+              <p class="stat-label"><i class="dot y" aria-hidden="true"></i>Points to spare</p>
+              <p class="stat-value">${spareValue}${spareExtra ? html`<span class="extra">${spareExtra}</span>` : null}</p>
+              <p class="stat-note">${spareNote}</p>
             </div>
           </div>
         </section>
