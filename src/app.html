@@ -369,6 +369,30 @@ function drawParchment(ctx, W, H) {
   ctx.strokeStyle = "#a8874a"; ctx.lineWidth = 2; ctx.strokeRect(1, 1, W - 2, H - 2);
 }
 
+// Where the ink of a label starts and ends, in CSS pixels from the pen position. It's measured on a
+// scratch canvas at the export scale, because measureText's bounds are rounded in some browsers.
+const inkCache = new Map();
+function inkBounds(font, text) {
+  const key = font + "|" + text;
+  if (inkCache.has(key)) return inkCache.get(key);
+  const pen = 10, c = document.createElement("canvas");
+  c.width = 80 * SCALE; c.height = 40 * SCALE;
+  const x = c.getContext("2d");
+  x.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+  x.font = font; x.textAlign = "left"; x.textBaseline = "middle"; x.fillText(text, pen, 20);
+  const { data, width, height } = x.getImageData(0, 0, c.width, c.height);
+  let l = -1, r = -1;
+  for (let col = 0; col < width; col++) {
+    for (let row = 0; row < height; row++) {
+      if (data[(row * width + col) * 4 + 3] >= 128) { if (l < 0) l = col; r = col; break; }
+    }
+  }
+  const ink = l < 0 ? { left: 0, right: x.measureText(text).width }
+                    : { left: l / SCALE - pen, right: (r + 1) / SCALE - pen };
+  inkCache.set(key, ink);
+  return ink;
+}
+
 // Column dividers and "1 · ·" level headers, as in the game, in the finish's colours
 function drawLevels(ctx, f, cols, top, bottom) {
   for (let ci = 1; ci < cols.length; ci++) {
@@ -377,16 +401,17 @@ function drawLevels(ctx, f, cols, top, bottom) {
     if (f.dividerHi) { ctx.fillStyle = f.dividerHi; ctx.fillRect(sx, top - 4, 1, bottom - top + 12); }
   }
   ctx.textBaseline = "middle";
+  const font = f.paper ? "bold 14px " + GAME : "600 14px " + SANS;
+  const boxLeft = (CW - FS) / 2 + (f.frame ? 0 : FRAME);   // where the tiles start inside a column
   cols.forEach(([lv], ci) => {
-    // number, dot, dot laid out like CSS justify-content: space-evenly across the column:
-    // the same gap before, between and after the items
-    const left = PX + ci * CW, ly = top + 12, d = 2.8;
-    ctx.font = f.paper ? "bold 14px " + GAME : "600 14px " + SANS;
-    const w = ctx.measureText(String(lv)).width;
-    const gap = (CW - w - 2 * d) / 4;
-    ctx.textAlign = "left"; ctx.fillStyle = f.level; ctx.fillText(String(lv), left + gap, ly);
+    // The number starts on the same pixel as the tiles below it. The dots spread out evenly after it:
+    // the gap after the number, between the dots and up to the next column's number is the same.
+    const t = String(lv), x0 = PX + ci * CW + boxLeft, ly = top + 12, d = 2.8;
+    const ink = inkBounds(font, t), w = ink.right - ink.left;
+    const gap = (CW - w - 2 * d) / 3;
+    ctx.font = font; ctx.textAlign = "left"; ctx.fillStyle = f.level; ctx.fillText(t, x0 - ink.left, ly);
     ctx.fillStyle = f.levelDot;
-    const d1 = left + gap + w + gap + d / 2, d2 = d1 + d + gap;
+    const d1 = x0 + w + gap + d / 2, d2 = d1 + d + gap;
     [d1, d2].forEach(dx => { ctx.beginPath(); ctx.arc(dx, ly + 1, d / 2, 0, Math.PI * 2); ctx.fill(); });
   });
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
