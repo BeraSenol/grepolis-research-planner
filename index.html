@@ -411,13 +411,16 @@ function drawLevels(ctx, f, cols, top, bottom) {
   }
   ctx.textBaseline = "middle";
   const font = f.paper ? "bold 14px " + GAME : "600 14px " + SANS;
-  const boxLeft = (CW - FS) / 2 + (f.frame ? 0 : FRAME);   // where the tiles start inside a column
+  const boxLeft = (CW - FS) / 2 + (f.frame ? 0 : FRAME), boxW = f.frame ? FS : TILE;   // the tiles in a column
+  const padX = 3;
   cols.forEach(([lv], ci) => {
-    // The number starts on the same pixel as the tiles below it. The dots spread out evenly after it:
-    // the gap after the number, between the dots and up to the next column's number is the same.
-    const t = String(lv), x0 = PX + ci * CW + boxLeft, ly = top + 12, d = 2.8;
+    // Laid out like a flex row as wide as the tile below it, with justify-content: space-between and
+    // padding-inline: 3px. The number starts 3px in from the tile's left edge (in Parchment that's where
+    // the picture inside the frame starts), the last dot ends 3px in from its right edge, and the two
+    // gaps in between are the same.
+    const t = String(lv), x0 = PX + ci * CW + boxLeft + padX, ly = top + 12, d = 2.8;
     const ink = inkBounds(font, t), w = ink.right - ink.left;
-    const gap = (CW - w - 2 * d) / 3;
+    const gap = (boxW - 2 * padX - w - 2 * d) / 2;
     ctx.font = font; ctx.textAlign = "left"; ctx.fillStyle = f.level; ctx.fillText(t, x0 - ink.left, ly);
     ctx.fillStyle = f.levelDot;
     const d1 = x0 + w + gap + d / 2, d2 = d1 + d + gap;
